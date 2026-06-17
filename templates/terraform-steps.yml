@@ -2,9 +2,6 @@ parameters:
 - name: command
   type: string
 
-- name: workspace
-  type: string
-
 steps:
 
 - script: terraform version
