@@ -5,56 +5,60 @@ trigger:
       - qa
       - main
 
-
 stages:
 
-# ====================================================
-# DEV ENVIRONMENT
-# ====================================================
 - stage: Dev_Plan
   displayName: 'Dev: Plan'
+  condition: eq(variables['Build.SourceBranchName'], 'dev')
+
   variables:
   - group: AZURE_ACCESS_GROUP_DEV
-  condition: eq(variables['Build.SourceBranchName'], 'dev')
 
   jobs:
   - deployment: Dev_Plan_Job
-    environment: 'dev'
+    environment: dev
+
     pool:
-      name: 'AzureAgentPool'
+      name: AzureAgentPool
       demands:
       - Agent.Name -equals azureadoagent
+
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+
           - template: templates/terraform-steps.yml
             parameters:
-              command: 'plan'
+              command: plan
 
 - stage: Dev_Apply
   displayName: 'Dev: Apply'
-  variables:
-  - group: AZURE_ACCESS_GROUP_DEV
   dependsOn: Dev_Plan
   condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'dev'))
 
+  variables:
+  - group: AZURE_ACCESS_GROUP_DEV
+
   jobs:
   - deployment: Dev_Apply_Job
-    environment: 'dev'
+    environment: dev
+
     pool:
-      name: 'AzureAgentPool'
+      name: AzureAgentPool
       demands:
       - Agent.Name -equals azureadoagent
+
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+
           - template: templates/terraform-steps.yml
             parameters:
-              command: 'apply'
+              command: apply
 
 # ====================================================
 # QA ENVIRONMENT
