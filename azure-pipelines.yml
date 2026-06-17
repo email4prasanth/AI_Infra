@@ -5,128 +5,167 @@ trigger:
       - qa
       - main
 
-variables:
-  - ${{ if eq(variables['Build.SourceBranchName'], 'dev') }}:
-    - group: 'AZURE_ACCESS_GROUP_DEV'
-  - ${{ if eq(variables['Build.SourceBranchName'], 'qa') }}:
-    - group: 'AZURE_ACCESS_GROUP_QA'
-  - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
-    - group: 'AZURE_ACCESS_GROUP_PROD'
-
 stages:
 
 # ====================================================
-# DEV ENVIRONMENT
+# DEV
 # ====================================================
+
 - stage: Dev_Plan
   displayName: 'Dev: Plan'
   condition: eq(variables['Build.SourceBranchName'], 'dev')
+
+  variables:
+    - group: AZURE_ACCESS_GROUP_DEV
+
   jobs:
   - deployment: Dev_Plan_Job
-    environment: 'dev'
+    environment: dev
+
     pool:
-      name: 'AzureAgentPool'
-      demands: [ Agent.Name -equals azureadoagent ]
+      name: AzureAgentPool
+      demands:
+      - Agent.Name -equals azureadoagent
+
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+
           - template: templates/terraform-steps.yml
             parameters:
-              command: 'plan'
+              command: plan
 
 - stage: Dev_Apply
   displayName: 'Dev: Apply'
   dependsOn: Dev_Plan
   condition: succeeded()
+
+  variables:
+    - group: AZURE_ACCESS_GROUP_DEV
+
   jobs:
   - deployment: Dev_Apply_Job
-    environment: 'dev'
+    environment: dev
+
     pool:
-      name: 'AzureAgentPool'
-      demands: [ Agent.Name -equals azureadoagent ]
+      name: AzureAgentPool
+      demands:
+      - Agent.Name -equals azureadoagent
+
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+
           - template: templates/terraform-steps.yml
             parameters:
-              command: 'apply'
+              command: apply
 
 # ====================================================
-# QA ENVIRONMENT
+# QA
 # ====================================================
+
 - stage: QA_Plan
   displayName: 'QA: Plan'
   condition: eq(variables['Build.SourceBranchName'], 'qa')
+
+  variables:
+    - group: AZURE_ACCESS_GROUP_QA
+
   jobs:
   - deployment: QA_Plan_Job
-    environment: 'qa'
+    environment: qa
+
     pool:
-      name: 'AzureAgentPool'
+      name: AzureAgentPool
+
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+
           - template: templates/terraform-steps.yml
             parameters:
-              command: 'plan'
+              command: plan
 
 - stage: QA_Apply
   displayName: 'QA: Apply'
   dependsOn: QA_Plan
   condition: succeeded()
+
+  variables:
+    - group: AZURE_ACCESS_GROUP_QA
+
   jobs:
   - deployment: QA_Apply_Job
-    environment: 'qa'
+    environment: qa
+
     pool:
-      name: 'AzureAgentPool'
+      name: AzureAgentPool
+
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+
           - template: templates/terraform-steps.yml
             parameters:
-              command: 'apply'
+              command: apply
 
 # ====================================================
-# PROD ENVIRONMENT
+# PROD
 # ====================================================
+
 - stage: Prod_Plan
   displayName: 'Prod: Plan'
   condition: eq(variables['Build.SourceBranchName'], 'main')
+
+  variables:
+    - group: AZURE_ACCESS_GROUP_PROD
+
   jobs:
   - deployment: Prod_Plan_Job
-    environment: 'prod'
+    environment: prod
+
     pool:
-      name: 'AzureAgentPool'
+      name: AzureAgentPool
+
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+
           - template: templates/terraform-steps.yml
             parameters:
-              command: 'plan'
+              command: plan
 
 - stage: Prod_Apply
   displayName: 'Prod: Apply'
   dependsOn: Prod_Plan
   condition: succeeded()
+
+  variables:
+    - group: AZURE_ACCESS_GROUP_PROD
+
   jobs:
   - deployment: Prod_Apply_Job
-    environment: 'prod'
+    environment: prod
+
     pool:
-      name: 'AzureAgentPool'
+      name: AzureAgentPool
+
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+
           - template: templates/terraform-steps.yml
             parameters:
-              command: 'apply'
+              command: apply
