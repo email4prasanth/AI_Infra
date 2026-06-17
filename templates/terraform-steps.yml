@@ -7,8 +7,14 @@ steps:
 - script: terraform version
   displayName: 'Terraform Version'
 
+- script: |
+    pwd
+    ls -R
+  displayName: 'Debug Repository Structure'
+
 - script: terraform init
   displayName: 'Terraform Init'
+  workingDirectory: ai_infra/backend-infra
   env:
     ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
     ARM_TENANT_ID: $(AZURE-TENANT-ID)
@@ -17,6 +23,7 @@ steps:
 
 - script: terraform validate
   displayName: 'Terraform Validate'
+  workingDirectory: ai_infra/backend-infra
   env:
     ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
     ARM_TENANT_ID: $(AZURE-TENANT-ID)
@@ -26,6 +33,7 @@ steps:
 - ${{ if eq(parameters.command, 'plan') }}:
   - script: terraform plan -out=tfplan
     displayName: 'Terraform Plan'
+    workingDirectory: ai_infra/backend-infra
     env:
       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       ARM_TENANT_ID: $(AZURE-TENANT-ID)
@@ -35,6 +43,7 @@ steps:
 - ${{ if eq(parameters.command, 'apply') }}:
   - script: terraform apply -auto-approve
     displayName: 'Terraform Apply'
+    workingDirectory: ai_infra/backend-infra
     env:
       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       ARM_TENANT_ID: $(AZURE-TENANT-ID)
