@@ -1,0 +1,39 @@
+trigger: none
+pr: none
+
+parameters:
+  - name: targetBranch
+    displayName: 'Target Environment / Branch'
+    type: string
+    default: 'dev'
+    values:
+      - dev
+      - qa
+      - main
+
+variables:
+  - ${{ if eq(parameters.targetBranch, 'dev') }}:
+    - group: 'AZURE_ACCESS_GROUP_DEV'
+  - ${{ if eq(parameters.targetBranch, 'qa') }}:
+    - group: 'AZURE_ACCESS_GROUP_QA'
+  - ${{ if eq(parameters.targetBranch, 'main') }}:
+    - group: 'AZURE_ACCESS_GROUP_PROD'
+
+stages:
+- stage: Teardown_Infrastructure
+  displayName: 'Teardown Infrastructure'
+  jobs:
+  - deployment: Terraform_Destroy_Job
+    environment: '${{ parameters.targetBranch }}' 
+    pool:
+      name: 'AzureAgentPool'
+      ${{ if eq(parameters.targetBranch, 'dev') }}:
+        demands: [ Agent.Name -equals azureadoagent ]
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - template: templates/terraform-steps.yml
+            parameters:
+              command: 'destroy'
