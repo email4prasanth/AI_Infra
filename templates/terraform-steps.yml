@@ -1,16 +1,14 @@
 parameters:
-- name: command
-  type: string
+  - name: command
+    type: string
 
 steps:
-
-# Install Terraform
 - task: TerraformInstaller@1
   displayName: 'Install Terraform'
   inputs:
     terraformVersion: 'latest'
 
-# Terraform Init
+# 1. Initialize Backend
 - task: TerraformTaskV4@4
   displayName: 'Terraform Init'
   inputs:
@@ -19,21 +17,26 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/ai_infra/backend-infra'
     backendServiceArm: 'ADOtoAzure'
 
-# Manage Workspace
-- script: |
-    echo "Targeting workspace: $(Build.SourceBranchName)"
-    cd $(System.DefaultWorkingDirectory)/ai_infra/backend-infra
-
-    if terraform workspace list | grep -q "$(Build.SourceBranchName)"; then
-      echo "Workspace $(Build.SourceBranchName) already exists. Selecting it..."
-      terraform workspace select $(Build.SourceBranchName)
-    else
-      echo "Workspace $(Build.SourceBranchName) not found. Creating it..."
-      terraform workspace new $(Build.SourceBranchName)
-    fi
+# 2. Check workspace if exists okay else create it & select it
+# Uses standard bash script because the Azure DevOps native task doesn't handle conditional workspace creation natively
+- task: Bash@3
   displayName: 'Manage Terraform Workspace'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "Targeting workspace: $(Build.SourceBranchName)"
+      cd $(System.DefaultWorkingDirectory)/ai_infra/backend-infra
+      
+      # List workspaces and check if the current branch name exists
+      if terraform workspace list | grep -q "$(Build.SourceBranchName)"; then
+        echo "Workspace $(Build.SourceBranchName) already exists. Selecting it..."
+        terraform workspace select $(Build.SourceBranchName)
+      else
+        echo "Workspace $(Build.SourceBranchName) not found. Creating it..."
+        terraform workspace new $(Build.SourceBranchName)
+      fi
 
-# Validate
+# 3. Validate Configuration
 - task: TerraformTaskV4@4
   displayName: 'Terraform Validate'
   inputs:
@@ -41,22 +44,21 @@ steps:
     command: 'validate'
     workingDirectory: '$(System.DefaultWorkingDirectory)/ai_infra/backend-infra'
 
-# Plan
+# 4. Refresh State (Only run during Plan stage to sync state)
 - ${{ if eq(parameters.command, 'plan') }}:
   - task: TerraformTaskV4@4
-    displayName: 'Terraform Plan'
+    displayName: 'Terraform Refresh'
     inputs:
       provider: 'azurerm'
-      command: 'plan'
+      command: 'refresh'
       workingDirectory: '$(System.DefaultWorkingDirectory)/ai_infra/backend-infra'
       environmentServiceNameAzureRM: 'ADOtoAzure'
 
-# Apply
-- ${{ if eq(parameters.command, 'apply') }}:
-  - task: TerraformTaskV4@4
-    displayName: 'Terraform Apply'
-    inputs:
-      provider: 'azurerm'
-      command: 'apply'
-      workingDirectory: '$(System.DefaultWorkingDirectory)/ai_infra/backend-infra'
-      environmentServiceNameAzureRM: 'ADOtoAzure'
+# 5. Final Execution (Plan or Apply)
+- task: TerraformTaskV4@4
+  displayName: 'Terraform ${{ parameters.command }}'
+  inputs:
+    provider: 'azurerm'
+    command: '${{ parameters.command }}'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/ai_infra/backend-infra'
+    environmentServiceNameAzureRM: 'ADOtoAzure'
