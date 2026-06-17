@@ -15,11 +15,8 @@ steps:
   displayName: 'Debug Repository Structure'
 
 - script: |
-    echo "Current Branch: $(Build.SourceBranchName)"
-    terraform init
-    terraform workspace select $(Build.SourceBranchName) || terraform workspace new $(Build.SourceBranchName)
-    terraform workspace show
-  displayName: 'Terraform Init & Workspace'
+    terraform init -reconfigure
+  displayName: 'Terraform Init'
   workingDirectory: Backend_Infra
   env:
     ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
@@ -27,6 +24,16 @@ steps:
     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
 
+- script: |
+    terraform workspace select $(Build.SourceBranchName) || terraform workspace new $(Build.SourceBranchName)
+    terraform workspace show
+  displayName: 'Terraform Workspace'
+  workingDirectory: Backend_Infra
+  env:
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
 
 - script: terraform validate
   displayName: 'Terraform Validate'

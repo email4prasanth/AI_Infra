@@ -4,14 +4,13 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
-}
 
-provider "azurerm" {
-  features {}
-}
-
-terraform {
   backend "azurerm" {
     resource_group_name  = "aiado-terraform-rg"
     storage_account_name = "aiadosto"
