@@ -2,6 +2,9 @@ parameters:
 - name: command
   type: string
 
+- name: workspace
+  type: string
+
 steps:
 
 - script: terraform version
@@ -9,43 +12,48 @@ steps:
 
 - script: |
     pwd
+    echo "===== Repository Structure ====="
+    find . -type f -name "*.tf"
     ls -R
   displayName: 'Debug Repository Structure'
 
-- script: terraform init
-  displayName: 'Terraform Init'
-  workingDirectory: ai_infra/backend-infra
-  env:
-    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-    ARM_TENANT_ID: $(AZURE-TENANT-ID)
-    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
-    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+# - script: |
+#     terraform init
+#     terraform workspace select ${{ parameters.workspace }} || terraform workspace new ${{ parameters.workspace }}
+#     terraform workspace show
+#   displayName: 'Terraform Init & Workspace'
+#   workingDirectory: ai_infra/backend-infra
+#   env:
+#     ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+#     ARM_TENANT_ID: $(AZURE-TENANT-ID)
+#     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+#     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
 
-- script: terraform validate
-  displayName: 'Terraform Validate'
-  workingDirectory: ai_infra/backend-infra
-  env:
-    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-    ARM_TENANT_ID: $(AZURE-TENANT-ID)
-    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
-    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+# - script: terraform validate
+#   displayName: 'Terraform Validate'
+#   workingDirectory: ai_infra/backend-infra
+#   env:
+#     ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+#     ARM_TENANT_ID: $(AZURE-TENANT-ID)
+#     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+#     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
 
-- ${{ if eq(parameters.command, 'plan') }}:
-  - script: terraform plan -out=tfplan
-    displayName: 'Terraform Plan'
-    workingDirectory: ai_infra/backend-infra
-    env:
-      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      ARM_TENANT_ID: $(AZURE-TENANT-ID)
-      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
-      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+# - ${{ if eq(parameters.command, 'plan') }}:
+#   - script: terraform plan -out=tfplan
+#     displayName: 'Terraform Plan'
+#     workingDirectory: ai_infra/backend-infra
+#     env:
+#       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+#       ARM_TENANT_ID: $(AZURE-TENANT-ID)
+#       ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+#       ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
 
-- ${{ if eq(parameters.command, 'apply') }}:
-  - script: terraform apply -auto-approve
-    displayName: 'Terraform Apply'
-    workingDirectory: ai_infra/backend-infra
-    env:
-      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      ARM_TENANT_ID: $(AZURE-TENANT-ID)
-      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
-      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+# - ${{ if eq(parameters.command, 'apply') }}:
+#   - script: terraform apply -auto-approve
+#     displayName: 'Terraform Apply'
+#     workingDirectory: ai_infra/backend-infra
+#     env:
+#       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+#       ARM_TENANT_ID: $(AZURE-TENANT-ID)
+#       ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+#       ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
