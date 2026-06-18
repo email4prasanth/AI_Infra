@@ -1,61 +1,65 @@
 parameters:
-  - name: command
-    type: string
+- name: command
+  type: string
 
 steps:
-- task: TerraformInstaller@1
-  displayName: 'Install Terraform'
-  inputs:
-    terraformVersion: 'latest'
 
-# 1. Initialize Backend
-- task: TerraformTaskV4@4
+- script: terraform version
+  displayName: 'Terraform Version'
+
+- script: |
+    pwd
+    echo "===== Repository Structure ====="
+    find . -type f -name "*.tf"
+    ls -R
+  displayName: 'Debug Repository Structure'
+
+- script: |
+    terraform init -reconfigure
   displayName: 'Terraform Init'
-  inputs:
-    provider: 'azurerm'
-    command: 'init'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/ai_infra/backend-infra'
-    backendServiceArm: 'ADOtoAzure'
+  workingDirectory: Backend_Infra
+  env:
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
 
-# 2. Check workspace if exists okay else create it & select it
-# Uses standard bash script because the Azure DevOps native task doesn't handle conditional workspace creation natively
-- { script: |
-    echo "Targeting workspace: $(Build.SourceBranchName)"
-    cd $(System.DefaultWorkingDirectory)/ai_infra/backend-infra
-    
-    # List workspaces and check if the current branch name exists
-    if terraform workspace list | grep -q "$(Build.SourceBranchName)"; then
-      echo "Workspace $(Build.SourceBranchName) already exists. Selecting it..."
-      terraform workspace select $(Build.SourceBranchName)
-    else
-      echo "Workspace $(Build.SourceBranchName) not found. Creating it..."
-      terraform workspace new $(Build.SourceBranchName)
-    fi
-  , displayName: 'Manage Terraform Workspace' }
+- script: |
+    terraform workspace select $(Build.SourceBranchName) || terraform workspace new $(Build.SourceBranchName)
+    terraform workspace show
+  displayName: 'Terraform Workspace'
+  workingDirectory: Backend_Infra
+  env:
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
 
-# 3. Validate Configuration
-- task: TerraformTaskV4@4
+- script: terraform validate
   displayName: 'Terraform Validate'
-  inputs:
-    provider: 'azurerm'
-    command: 'validate'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/ai_infra/backend-infra'
+  workingDirectory: Backend_Infra
+  env:
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
 
-# 4. Refresh State (Only run during Plan stage to sync state)
 - ${{ if eq(parameters.command, 'plan') }}:
-  - task: TerraformTaskV4@4
-    displayName: 'Terraform Refresh'
-    inputs:
-      provider: 'azurerm'
-      command: 'refresh'
-      workingDirectory: '$(System.DefaultWorkingDirectory)/ai_infra/backend-infra'
-      environmentServiceNameAzureRM: 'ADOtoAzure'
+  - script: terraform plan -out=tfplan
+    displayName: 'Terraform Plan'
+    workingDirectory: Backend_Infra
+    env:
+      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      ARM_TENANT_ID: $(AZURE-TENANT-ID)
+      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
 
-# 5. Final Execution (Plan or Apply)
-- task: TerraformTaskV4@4
-  displayName: 'Terraform ${{ parameters.command }}'
-  inputs:
-    provider: 'azurerm'
-    command: '${{ parameters.command }}'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/ai_infra/backend-infra'
-    environmentServiceNameAzureRM: 'ADOtoAzure'
+# - ${{ if eq(parameters.command, 'apply') }}:
+#   - script: terraform apply -auto-approve
+#     displayName: 'Terraform Apply'
+#     workingDirectory: Backend_Infra
+#     env:
+#       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+#       ARM_TENANT_ID: $(AZURE-TENANT-ID)
+#       ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+#       ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
