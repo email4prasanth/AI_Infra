@@ -1,39 +1,29 @@
-trigger: none
-pr: none
-
-parameters:
-  - name: targetBranch
-    displayName: 'Target Environment / Branch'
-    type: string
-    default: 'dev'
-    values:
-      - dev
-      - qa
-      - main
-
-variables:
-  - ${{ if eq(parameters.targetBranch, 'dev') }}:
-    - group: 'AZURE_ACCESS_GROUP_DEV'
-  - ${{ if eq(parameters.targetBranch, 'qa') }}:
-    - group: 'AZURE_ACCESS_GROUP_QA'
-  - ${{ if eq(parameters.targetBranch, 'main') }}:
-    - group: 'AZURE_ACCESS_GROUP_PROD'
+trigger: none  # Disables automatic triggers so changes to code don't delete your infrastructure
 
 stages:
-- stage: Teardown_Infrastructure
-  displayName: 'Teardown Infrastructure'
+
+- stage: Dev_Destroy
+  displayName: 'Dev: Destroy'
+  condition: eq(variables['Build.SourceBranchName'], 'dev')
+
+  variables:
+  - group: AZURE_ACCESS_GROUP_DEV
+
   jobs:
-  - deployment: Terraform_Destroy_Job
-    environment: '${{ parameters.targetBranch }}' 
+  - deployment: Dev_Destroy_Job
+    environment: dev
+
     pool:
-      name: 'AzureAgentPool'
-      ${{ if eq(parameters.targetBranch, 'dev') }}:
-        demands: [ Agent.Name -equals azureadoagent ]
+      name: AzureAgentPool
+      demands:
+      - Agent.Name -equals azureadoagent
+
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+
           - template: templates/terraform-steps.yml
             parameters:
-              command: 'destroy'
+              command: destroy

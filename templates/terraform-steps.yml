@@ -83,3 +83,15 @@ steps:
         ARM_TENANT_ID: $(AZURE-TENANT-ID)
         ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
         ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+
+
+- ${{ if eq(parameters.command, 'destroy') }}:
+    - - script: terraform destroy -auto-approve tfplan 2>/dev/null || terraform destroy -auto-approve
+      displayName: 'Terraform Destroy'
+      workingDirectory: Backend_Infra
+      env:
+        ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+        ARM_TENANT_ID: $(AZURE-TENANT-ID)
+        ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+        ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+
