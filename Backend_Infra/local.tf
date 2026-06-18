@@ -103,7 +103,4 @@ locals {
   # Define method and headers for API Management
   allowed_methods = ["GET", "POST", "DELETE", "OPTIONS", "PUT"]
 
-key_vault_name = {
-  dev = "${terraform.workspace}-${local.project_name.name}-kv"
-}
 }
