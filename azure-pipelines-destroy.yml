@@ -1,7 +1,39 @@
+# trigger: none  # Disables automatic triggers so changes to code don't delete your infrastructure
+
+# stages:
+
+# - stage: Dev_Destroy
+#   displayName: 'Dev: Destroy'
+#   condition: eq(variables['Build.SourceBranchName'], 'dev')
+
+#   variables:
+#   - group: AZURE_ACCESS_GROUP_DEV
+
+#   jobs:
+#   - deployment: Dev_Destroy_Job
+#     environment: dev
+
+#     pool:
+#       name: AzureAgentPool
+#       demands:
+#       - Agent.Name -equals azureadoagent
+
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - checkout: self
+
+#           - template: templates/terraform-steps.yml
+#             parameters:
+#               command: destroy
 trigger: none  # Disables automatic triggers so changes to code don't delete your infrastructure
 
 stages:
 
+# ====================================================
+# DEV ENVIRONMENT DESTROY
+# ====================================================
 - stage: Dev_Destroy
   displayName: 'Dev: Destroy'
   condition: eq(variables['Build.SourceBranchName'], 'dev')
@@ -12,6 +44,35 @@ stages:
   jobs:
   - deployment: Dev_Destroy_Job
     environment: dev
+
+    pool:
+      name: AzureAgentPool
+      demands:
+      - Agent.Name -equals azureadoagent
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          - template: templates/terraform-steps.yml
+            parameters:
+              command: destroy
+
+# ====================================================
+# QA ENVIRONMENT DESTROY
+# ====================================================
+- stage: QA_Destroy
+  displayName: 'QA: Destroy'
+  condition: eq(variables['Build.SourceBranchName'], 'qa')
+
+  variables:
+  - group: AZURE_ACCESS_GROUP_QA
+
+  jobs:
+  - deployment: QA_Destroy_Job
+    environment: qa
 
     pool:
       name: AzureAgentPool

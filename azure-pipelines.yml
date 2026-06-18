@@ -1,3 +1,72 @@
+# trigger:
+#   branches:
+#     include:
+#       - dev
+#       - qa
+#       - main
+
+# stages:
+
+# - stage: Dev_Plan
+#   displayName: 'Dev: Plan'
+#   condition: eq(variables['Build.SourceBranchName'], 'dev')
+
+#   variables:
+#   - group: AZURE_ACCESS_GROUP_DEV
+
+#   jobs:
+#   - deployment: Dev_Plan_Job
+#     environment: dev
+
+#     pool:
+#       name: AzureAgentPool
+#       demands:
+#       - Agent.Name -equals azureadoagent
+
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - checkout: self
+
+#           - template: templates/terraform-steps.yml
+#             parameters:
+#               command: plan
+
+# - stage: Dev_Apply
+#   displayName: 'Dev: Apply'
+#   dependsOn: Dev_Plan
+#   condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'dev'))
+
+#   variables:
+#   - group: AZURE_ACCESS_GROUP_DEV
+
+#   jobs:
+#   - deployment: Dev_Apply_Job
+#     environment: dev
+
+#     pool:
+#       name: AzureAgentPool
+#       demands:
+#       - Agent.Name -equals azureadoagent
+
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - checkout: self
+
+#           - template: templates/terraform-steps.yml
+#             parameters:
+#               command: apply
+
+# # ====================================================
+# # QA ENVIRONMENT
+# # ====================================================
+
+# # ====================================================
+# # PROD ENVIRONMENT
+# # ====================================================
 trigger:
   branches:
     include:
@@ -7,6 +76,9 @@ trigger:
 
 stages:
 
+# ====================================================
+# DEV ENVIRONMENT
+# ====================================================
 - stage: Dev_Plan
   displayName: 'Dev: Plan'
   condition: eq(variables['Build.SourceBranchName'], 'dev')
@@ -63,6 +135,58 @@ stages:
 # ====================================================
 # QA ENVIRONMENT
 # ====================================================
+- stage: QA_Plan
+  displayName: 'QA: Plan'
+  condition: eq(variables['Build.SourceBranchName'], 'qa')
+
+  variables:
+  - group: AZURE_ACCESS_GROUP_QA
+
+  jobs:
+  - deployment: QA_Plan_Job
+    environment: qa
+
+    pool:
+      name: AzureAgentPool
+      demands:
+      - Agent.Name -equals azureadoagent
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          - template: templates/terraform-steps.yml
+            parameters:
+              command: plan
+
+- stage: QA_Apply
+  displayName: 'QA: Apply'
+  dependsOn: QA_Plan
+  condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'qa'))
+
+  variables:
+  - group: AZURE_ACCESS_GROUP_QA
+
+  jobs:
+  - deployment: QA_Apply_Job
+    environment: qa
+
+    pool:
+      name: AzureAgentPool
+      demands:
+      - Agent.Name -equals azureadoagent
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          - template: templates/terraform-steps.yml
+            parameters:
+              command: apply
 
 # ====================================================
 # PROD ENVIRONMENT
