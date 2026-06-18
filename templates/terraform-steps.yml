@@ -86,7 +86,7 @@ steps:
 
 
 - ${{ if eq(parameters.command, 'destroy') }}:
-    - - script: terraform destroy -auto-approve tfplan 2>/dev/null || terraform destroy -auto-approve
+    - script: terraform destroy -auto-approve tfplan 2>/dev/null || terraform destroy -auto-approve
       displayName: 'Terraform Destroy'
       workingDirectory: Backend_Infra
       env:
