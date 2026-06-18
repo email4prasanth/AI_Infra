@@ -17,3 +17,10 @@ az login --tenant 5fa31033-e5a8-478a-8865-bbf71f8162f3
 az account set --subscription "ceb3ae8b-a788-4e9d-965b-3c3250fdf106"
 az account show
 ```
+
+### Decomission
+- Azure CLI context
+```sh
+az logout --username "reachtechprasanth@gmail.com"
+Disconnect-AzAccount -Username "reachtechprasanth@gmail.com"
+```
