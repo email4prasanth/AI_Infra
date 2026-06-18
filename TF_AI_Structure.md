@@ -1,8 +1,8 @@
 ai_infra/
 .
 ├── .gitignore
-├── azure-pipelines.yml             <-- Stays at root
-├── templates/                      <-- Move this to root
+├── azure-pipelines.yml             
+├── templates/                      
 │   └── terraform-steps.yml
 └── ai_infra/
     └── backend-infra/
@@ -13,3 +13,4 @@ ai_infra/
         ├── resource_group.tf
         ├── security_group.tf
         └── vm.tf
+├── azure-pipelines-destroy.yml 
