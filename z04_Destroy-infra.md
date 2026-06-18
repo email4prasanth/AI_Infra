@@ -5,7 +5,7 @@ git push origin dev
 ```
 - Register the Destroy Pipeline
     - Go to Pipelines > Pipelines in Azure DevOps.
-    - Click New pipeline -> Select your repo source -> Select your repo.
+    - Click New pipeline -> connect azure repo git > select repo Azureterraform
     - Choose Existing Azure Pipelines YAML file.
     - Change the branch dropdown to dev (since your code is there) and select /azure-pipelines-destroy.yml.
     - Click the down arrow next to Run and hit Save. Rename this pipeline to AI-Infra-Teardown.
